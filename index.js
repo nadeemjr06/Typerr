@@ -1,11 +1,13 @@
 const express= require('express');
 const mongoose= require('mongoose')
 const cors= require('cors')
+const jwt= require('jsonwebtoken')
 
 require('dotenv').config()
 
 const Post= require('./models/Post')
 const User= require('./models/User')
+const Comment= require('./models/Comment')
 const app= express();
 const PORT= 5000;
 
@@ -22,16 +24,39 @@ app.get('/', (req,res) => {
     res.json({ message: "Main blog page. Head to /posts to see posts."})
 })
 
+function verifyToken(req, res, next) {
+    const authHeader = req.headers.authorization;
+    
+    if(!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({message: "No token provided"});
+    }
+    
+    const token = authHeader.split(' ')[1];
+    
+    if(!token) {
+        return res.status(401).json({message: "No token provided"});
+    }
+    
+    try {
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        req.user = decoded;
+        next();
+    } catch(err) {
+        return res.status(403).json({message: "Invalid or expired token"});
+    }
+}
+
 app.get('/posts', async (req,res) => {
     const posts= await Post.find()
     res.json(posts)
 })
 
-app.post('/posts',async (req, res) => {
+app.post('/posts', verifyToken, async (req, res) => {
     const {title,content}= req.body
     const newPost= new Post({
         title:title,
-        content: content
+        content: content,
+        author: req.user._id
     })
     const savePost= await newPost.save()
     res.status(201).json(savePost)
@@ -47,7 +72,7 @@ app.get('/posts/:id', async (req,res)=>{
 })
 
 // update
-app.put('/posts/:id', async (req,res) => {
+app.put('/posts/:id', verifyToken, async (req,res) => {
     const postId= req.params.id
     const {title,content}= req.body
     const updPost= await Post.findByIdAndUpdate(postId,{title: title, content: content})
@@ -56,7 +81,7 @@ app.put('/posts/:id', async (req,res) => {
 })
 
 
-app.delete('/posts/:id', async (req, res) => {
+app.delete('/posts/:id', verifyToken, async (req, res) => {
     const deletePost= await Post.findByIdAndDelete(req.params.id)
     if(!deletePost){
         return res.status(404).json({message: "ID not found."})
@@ -89,7 +114,7 @@ app.post("/login", async (req,res)=>{
     try{
         const user= await User.findOne({email : email})
         if(user){
-            const isPasswordCorrect= user.isPassword(password)
+            const isPasswordCorrect= await user.isPassword(password)
 
             if (!isPasswordCorrect) {
                 return res.status(401).json({ message: "Invalid credentials." });
@@ -97,9 +122,17 @@ app.post("/login", async (req,res)=>{
             const accessToken= user.genAccess()
             const refreshToken= user.genRefresh()
             user.refreshToken=refreshToken
-            const saveUser= await user.save()
-            console.log(user.refreshToken)
-            return res.status(200).json({message:"user logged in successfully!"})
+            await user.save()
+            
+            return res.status(200).json({
+                message:"User logged in successfully!",
+                accessToken: accessToken,
+                user: {
+                    _id: user._id,
+                    username: user.username,
+                    email: user.email
+                }
+            })
         }
         else{
             return res.json({message:"User does not exist! register please."})
@@ -107,5 +140,75 @@ app.post("/login", async (req,res)=>{
     }
     catch(err){
         res.status(404).json({success: false,error: err ,  message: err.message})
+    }
+})
+
+// COMMENTS FUNCTIONALITY
+
+app.get('/posts/:id/comments', async (req, res)=>{
+    try{
+        const comments= await Comment.find({post: req.params.id})
+            .populate('author', 'username')
+            .sort({createdAt: -1})
+        return res.status(200).json(comments)
+    }catch(err){
+        return res.status(404).json({message: "Error fetching comments", error: err.message})
+    }
+})
+
+app.post('/posts/:id/comments', verifyToken, async (req, res)=>{
+    try{
+        const {content}= req.body
+        const newComm= new Comment({
+            author: req.user._id,
+            content: content,
+            post: req.params.id
+        })
+
+        const saveComm= await newComm.save()
+        res.status(201).json(saveComm)
+    }catch(err){
+        return res.status(400).json({message: "Error creating comment", error: err.message})
+    }
+})
+
+// LIKES FUNCTIONALITY
+
+// Like a post (toggle)
+app.post('/posts/:id/like', verifyToken, async (req, res)=> {
+    try{
+        const userId = req.user._id  // Get user ID from token!
+        const post = await Post.findById(req.params.id)
+        
+        if(!post){
+            return res.status(404).json({message: "Post not found"})
+        }
+        
+        // Check if user already liked (search the array)
+        const userIndex = post.likedBy.findIndex(uid => uid.toString() === userId.toString())
+        
+        if(userIndex !== -1){
+            // User ALREADY liked - REMOVE (unlike)
+            post.likedBy.splice(userIndex, 1)  // Remove from array
+            post.likes = post.likedBy.length    // Update likes count
+            await post.save()
+            return res.status(200).json({
+                message: "Post unliked!",
+                liked: false,
+                likes: post.likedBy.length  // Count from array
+            })
+        } else {
+            // User NOT liked yet - ADD (like)
+            post.likedBy.push(userId)  // Add to array
+            post.likes = post.likedBy.length    // Update likes count
+            await post.save()
+            return res.status(200).json({
+                message: "Post liked!",
+                liked: true,
+                likes: post.likedBy.length  // Count from array
+            })
+        }
+    }catch(err){
+        return res.status(400).json({message: "Error toggling like", error: err.message})
     }
 })

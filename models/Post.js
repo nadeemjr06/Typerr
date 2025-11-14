@@ -3,8 +3,8 @@ const mongoose= require('mongoose')
 const Post= new mongoose.Schema({
     author:{
         type: mongoose.Schema.ObjectId,
-        ref: "User",
-        required: true
+        ref: "User"
+        // required: true  // Commented out temporarily
     },
     title: {
         type: String,
@@ -17,7 +17,11 @@ const Post= new mongoose.Schema({
     likes: {
         type: Number,
         default: 0
-    }
+    },
+    likedBy: [{
+        type: mongoose.Schema.ObjectId,
+        ref: "User"
+    }]
 },
 {timestamps: true})
 
