@@ -1,0 +1,203 @@
+/* src/index.css — paste/overwrite this file */
+
+/* Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+:root{
+  --header-height: 72px;
+  --sidebar-width: 240px;
+  --bg: #fafafa;
+  --panel: #ffffff;
+  --muted: #6b6b6b;
+  --text: #111111;
+  --border: #e6e6e6;
+  --max-width: 1100px;
+  --radius: 8px;
+}
+
+*{box-sizing:border-box}
+html,body,#root{height:100%}
+body{
+  margin:0;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* HEADER (full-width) */
+.app-header{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:var(--header-height);
+  background:var(--panel);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:40;
+  box-shadow: 0 0 0 0 rgba(0,0,0,0.02);
+}
+
+.header-inner{
+  width:100%;
+  max-width:var(--max-width);
+  padding: 0 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+/* Brand (left) */
+.brand{
+  font-weight:800;
+  font-size:26px;
+  letter-spacing:1px;
+}
+
+/* Profile button (right) */
+.profile-btn{
+  display:inline-grid;
+  place-items:center;
+  width:44px;
+  height:44px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:var(--panel);
+  cursor:pointer;
+  padding:0;
+}
+.profile-icon{
+  font-size:24px;
+  color:var(--muted);
+}
+
+/* full width straight line under header */
+.header-divider{
+  position:fixed;
+  top:calc(var(--header-height));
+  left:0;
+  width:100%;
+  height:1px;
+  background:var(--border);
+  z-index:35;
+}
+
+/* PAGE SHELL under header */
+.page-shell{
+  display:flex;
+  width:100%;
+  margin-top:calc(var(--header-height) + 1px);
+  min-height:calc(100vh - var(--header-height) - 1px);
+}
+
+/* LEFT SIDEBAR container */
+.left-column{
+  width:var(--sidebar-width);
+  min-width:var(--sidebar-width);
+  background:transparent;
+  padding-top:20px;
+  display:flex;
+  justify-content:flex-start;
+  align-items:flex-start;
+  position:relative;
+}
+
+/* Sidebar container that holds items */
+.sidebar-container{
+  width:calc(var(--sidebar-width) - 20px);
+  margin-left:10px;
+  background:var(--panel);
+  border-radius:8px;
+  padding:18px 12px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  height:calc(100vh - var(--header-height) - 40px);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  overflow:hidden;
+}
+
+/* Vertical divider starting under header and spanning window (placed between sidebar and main) */
+.vertical-divider{
+  width:1px;
+  background:var(--border);
+  margin-left:8px;
+}
+
+/* MAIN column */
+.main-column{
+  flex:1;
+  padding: 18px 28px;
+  overflow: hidden;
+}
+
+/* main scrollable area inside main column */
+.main-scroll{
+  height:calc(100vh - var(--header-height) - 36px);
+  overflow-y:auto;
+  padding-right:8px;
+}
+
+/* Sidebar nav items */
+.sidebar-nav{
+  display:flex;
+  flex-direction:column;
+  height:100%;
+}
+
+.sidebar-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px;
+  border-radius:8px;
+  color:var(--muted);
+  text-decoration:none;
+  font-size:15px;
+}
+
+.sidebar-item:hover{
+  background:#f6f6f6;
+  color:var(--text);
+}
+
+.sidebar-item .material-symbols-outlined{
+  font-size:20px;
+  color:var(--muted);
+}
+
+.sidebar-item.active{
+  background:#f2f2f2;
+  color:var(--text);
+  font-weight:600;
+}
+
+/* hide logout click pointer styling */
+.sidebar-item.logout{ cursor:default }
+
+/* general content card styles used in pages */
+.card{
+  background:var(--panel);
+  border-radius:var(--radius);
+  padding:12px;
+  box-shadow:0 1px 2px rgba(0,0,0,0.04);
+  border:1px solid rgba(0,0,0,0.03);
+  margin-bottom:14px;
+}
+
+/* material symbols default */
+.material-symbols-outlined{ vertical-align:middle }
+
+/* responsive */
+@media (max-width:1000px){
+  :root{ --sidebar-width: 72px; --header-height:64px; --max-width:920px }
+  .brand{ font-size:20px }
+  .left-column{ width:var(--sidebar-width); min-width:var(--sidebar-width) }
+  .sidebar-container{ width:calc(var(--sidebar-width) - 8px); margin-left:4px; padding:12px }
+  .sidebar-item .label{ display:none }
+  .header-inner{ padding:0 12px }
+  .main-column{ padding:14px 12px }
+}
