@@ -1,34 +1,3 @@
-// import React, { useEffect, useState } from 'react';
-// import api from '../api/axios';
-// import BlogCard from '../component/BlogCard';
-
-// export default function Home() {
-//   const [blogs, setBlogs] = useState([]);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     let mounted = true;
-//     api.get('/blogs')
-//       .then(res => { if (mounted) setBlogs(res.data); })
-//       .catch(err => console.error(err))
-//       .finally(() => mounted && setLoading(false));
-//     return () => { mounted = false; };
-//   }, []);
-
-//   if (loading) return <div className="center">Loading...</div>;
-//   if (!blogs.length) return <div>No posts yet. Create one!</div>;
-
-//   return (
-//     <div>
-//       <h1>Latest</h1>
-//       <div className="grid">
-//         {blogs.map(b => <BlogCard key={b._id} blog={b} />)}
-//       </div>
-//     </div>
-//   );
-// }
-
-// src/pages/Home.jsx
 import React, { useEffect, useState } from 'react';
 import BlogCard from "../component/BlogCard";
 
@@ -36,7 +5,7 @@ export default function Home(){
   const [posts, setPosts] = useState([]);
 
   useEffect(()=>{
-    // demo static data matching screenshot style
+    // demo 
     setPosts([
       { id: 'p1', title: 'The art of CSS', author: 'Nadeem', excerpt: 'Cascading Style Sheets is a style sheet language used for specifying the presentation and styling of a document ...', likes: 88, comments: 47 },
       { id: 'p2', title: 'Navigating the AI world', author: 'Manav Dewangan', excerpt: 'Exploring the world of AI means learning how new technologies are changing the way we work and live...', likes: 211, comments: 123 },
