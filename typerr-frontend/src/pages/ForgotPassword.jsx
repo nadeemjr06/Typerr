@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-export default function Register() {
+export default function ForgotPassword() {
   return (
     <div
       style={{
@@ -23,28 +23,18 @@ export default function Register() {
         }}
       >
         <h3 style={{ marginBottom: "20px", whiteSpace: "nowrap" }}>
-          Create an account
+          Forgot password
         </h3>
 
         <div style={{ textAlign: "left" }}>
-          <label>Full Name</label>
-          <input
-            type="text"
-            placeholder="Enter full name"
-            style={{ width: "100%", padding: "8px", marginBottom: "12px" }}
-          />
+          <p style={{ fontSize: "14px", marginBottom: "10px" }}>
+            Enter your email and we'll send you a reset link.
+          </p>
 
           <label>Email</label>
           <input
             type="email"
-            placeholder="Enter email"
-            style={{ width: "100%", padding: "8px", marginBottom: "12px" }}
-          />
-
-          <label>Password</label>
-          <input
-            type="password"
-            placeholder="Enter password"
+            placeholder="Enter your email"
             style={{ width: "100%", padding: "8px", marginBottom: "15px" }}
           />
         </div>
@@ -60,13 +50,13 @@ export default function Register() {
             cursor: "pointer",
           }}
         >
-          Sign Up
+          Send reset link
         </button>
 
         <p style={{ marginTop: "10px", textAlign: "left", fontSize: "14px" }}>
-          Already have an account?{" "}
+          Remembered your password?{" "}
           <Link to="/login" style={{ color: "blue" }}>
-            Login
+            Back to login
           </Link>
         </p>
       </div>
