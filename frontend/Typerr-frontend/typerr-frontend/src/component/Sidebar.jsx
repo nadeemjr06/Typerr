@@ -1,10 +1,20 @@
 // src/component/Sidebar.jsx
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 export default function Sidebar() {
   const loc = useLocation();
+  const navigate = useNavigate();
   const isActive = (path) => loc.pathname === path;
+
+  const handleLogout = () => {
+    // Clear stored data
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('user');
+    
+    // Redirect to login page
+    navigate('/login');
+  };
 
   return (
     <aside className="sidebar-container">
@@ -27,6 +37,14 @@ export default function Sidebar() {
         </Link>
 
         <Link
+          to="/my-blogs"
+          className={`sidebar-item ${isActive("/my-blogs") ? "active" : ""}`}
+        >
+          <span className="material-symbols-outlined">edit_note</span>
+          <span className="label">My Blogs</span>
+        </Link>
+
+        <Link
           to="/profile"
           className={`sidebar-item ${isActive("/profile") ? "active" : ""}`}
         >
@@ -36,8 +54,8 @@ export default function Sidebar() {
 
         <div style={{ flex: 1 }} />
 
-        {/* Logout left unchanged (no navigation, same as your original code) */}
-        <div className="sidebar-item logout">
+        {/* Logout button with navigation */}
+        <div className="sidebar-item logout" onClick={handleLogout} style={{ cursor: 'pointer' }}>
           <span className="material-symbols-outlined">logout</span>
           <span className="label">Logout</span>
         </div>

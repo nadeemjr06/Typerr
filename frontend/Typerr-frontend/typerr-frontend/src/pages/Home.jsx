@@ -4,31 +4,50 @@ import api from '../api/axios';
 
 export default function Home(){
   const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(()=>{
-    // demo 
-    // setPosts([
-    //   { id: 'p1', title: 'The art of CSS', author: 'Nadeem', excerpt: 'Cascading Style Sheets is a style sheet language used for specifying the presentation and styling of a document ...', likes: 88, comments: 47 },
-    //   { id: 'p2', title: 'Navigating the AI world', author: 'Manav Dewangan', excerpt: 'Exploring the world of AI means learning how new technologies are changing the way we work and live...', likes: 211, comments: 123 },
-    //   { id: 'p3', title: 'Legacy technology now', author: 'Nikhil', excerpt: 'Legacy technology means old computer systems or software that many companies still use...', likes: 74, comments: 33 },
-    //   { id: 'p4', title: 'Wireframes for noobs', author: 'Bill Gates', excerpt: 'A wireframe is like your website\'s skeleton — all bones, no muscles, no makeup. It shows where everything goes...', likes: 42069, comments: 6767 },
-    // ]);
-    api.get('/blogs/five')
-    .then(res => {console.log(res.data);setPosts(res.data)})
-    .catch(err=> {console.log(res.data);console.log(err)})
-    // setPosts(posts)
+  useEffect(() => {
+    fetchPosts();
   }, []);
+
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get('/blogs/five');
+      setPosts(res.data || []);
+    } catch (err) {
+      console.error('Error fetching posts:', err);
+      setPosts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <section className="content" aria-labelledby="for-you">
+        <div className="topbar" style={{ justifyContent: 'flex-start', paddingLeft: 0 }}>
+          <h4 id="for-you" className="section-title">For you</h4>
+        </div>
+        <p>Loading...</p>
+      </section>
+    );
+  }
 
   return (
     <section className="content" aria-labelledby="for-you">
-      <div className="topbar" style={{justifyContent:'flex-start', paddingLeft:0}}>
+      <div className="topbar" style={{ justifyContent: 'flex-start', paddingLeft: 0 }}>
         <h4 id="for-you" className="section-title">For you</h4>
       </div>
 
       <div className="card-list" role="list">
-        {posts.map(p => (
-          <BlogCard key={p._id} post={p} />
-        ))}
+        {posts.length > 0 ? (
+          posts.map(p => (
+            <BlogCard key={p._id} post={p} />
+          ))
+        ) : (
+          <p style={{ color: '#6b6b6b', textAlign: 'center', padding: '20px' }}>No blogs available</p>
+        )}
       </div>
 
       <div className="footer-spacer" />

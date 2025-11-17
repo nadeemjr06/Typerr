@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import CreateEditBlog from "./pages/CreateEditBlog";
+import MyBlogs from "./pages/MyBlogs";
 // import Library from "./pages/Library";
 // import Profile from "./pages/Profile";
 
@@ -62,6 +63,7 @@ export default function App() {
               <Route path="/home" element={<Home />} />
               <Route path="/blog/:id" element={<BlogView />} />
               <Route path="/create" element={<CreateEditBlog />} />
+              <Route path="/my-blogs" element={<MyBlogs />} />
               {/* <Route path="/library" element={<Library />} /> */}
               {/* <Route path="/profile" element={<Profile />} /> */}
             </Routes>
