@@ -185,6 +185,32 @@ app.get('/blogs/five', async (req, res) => {
     }
 });
 
+// Get user's published blogs (must be before /blogs/:id)
+app.get('/blogs/my-blogs', verifyToken, async (req, res) => {
+    try {
+        const blogs = await db.collection('posts')
+            .find({ author: new ObjectId(req.user._id) })
+            .sort({ createdAt: -1 })
+            .toArray();
+        res.json(blogs);
+    } catch (err) {
+        res.status(500).json({ message: "Error fetching blogs", error: err.message });
+    }
+});
+
+// Get user's drafts (must be before /blogs/:id)
+app.get('/blogs/drafts', verifyToken, async (req, res) => {
+    try {
+        const drafts = await db.collection('posts')
+            .find({ author: new ObjectId(req.user._id), status: 'draft' })
+            .sort({ updatedAt: -1 })
+            .toArray();
+        res.json(drafts);
+    } catch (err) {
+        res.status(500).json({ message: "Error fetching drafts", error: err.message });
+    }
+});
+
 // Create post
 app.post('/blogs', verifyToken, async (req, res) => {
     const { title, content } = req.body;
@@ -382,4 +408,175 @@ app.post('/blogs/:id/like', verifyToken, async (req, res) => {
     }
 });
 
+// ==================== SAVE BLOG ROUTES ====================
 
+// Save or unsave a blog
+app.post('/blogs/:id/save', verifyToken, async (req, res) => {
+    try {
+        const userId = new ObjectId(req.user._id);
+        const blogId = new ObjectId(req.params.id);
+        
+        const user = await db.collection('users').findOne({ _id: userId });
+        const savedBlogs = user.savedBlogs || [];
+        
+        // Check if already saved
+        const isSaved = savedBlogs.some(id => id.toString() === blogId.toString());
+        
+        if (isSaved) {
+            // Remove from saved
+            await db.collection('users').updateOne(
+                { _id: userId },
+                { $pull: { savedBlogs: blogId } }
+            );
+            res.json({ message: "Blog unsaved!", saved: false });
+        } else {
+            // Add to saved
+            await db.collection('users').updateOne(
+                { _id: userId },
+                { $addToSet: { savedBlogs: blogId } }
+            );
+            res.json({ message: "Blog saved!", saved: true });
+        }
+    } catch (err) {
+        res.status(400).json({ message: "Error", error: err.message });
+    }
+});
+
+// Get saved blogs
+app.get('/user/saved-blogs', verifyToken, async (req, res) => {
+    try {
+        const user = await db.collection('users').findOne({ _id: new ObjectId(req.user._id) });
+        
+        if (!user?.savedBlogs?.length) {
+            return res.json([]);
+        }
+        
+        const savedBlogs = await db.collection('posts')
+            .aggregate([
+                { $match: { _id: { $in: user.savedBlogs } } },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'author',
+                        foreignField: '_id',
+                        as: 'authorInfo'
+                    }
+                },
+                { $unwind: '$authorInfo' },
+                {
+                    $project: {
+                        title: 1,
+                        content: 1,
+                        likes: 1,
+                        createdAt: 1,
+                        'author': {
+                            _id: '$authorInfo._id',
+                            username: '$authorInfo.username'
+                        }
+                    }
+                }
+            ])
+            .toArray();
+        
+        res.json(savedBlogs);
+    } catch (err) {
+        res.status(500).json({ message: "Error", error: err.message });
+    }
+});
+
+// Check if blog is saved
+app.get('/blogs/:id/is-saved', verifyToken, async (req, res) => {
+    try {
+        const user = await db.collection('users').findOne({ _id: new ObjectId(req.user._id) });
+        const isSaved = user?.savedBlogs?.some(id => id.toString() === req.params.id) || false;
+        res.json({ saved: isSaved });
+    } catch (err) {
+        res.status(500).json({ message: "Error", error: err.message });
+    }
+});
+
+// // ==================== USER PROFILE ROUTES ====================
+
+// // Get user profile
+// app.get('/user/profile', verifyToken, async (req, res) => {
+//     try {
+//         const user = await db.collection('users').findOne(
+//             { _id: new ObjectId(req.user._id) },
+//             { projection: { password: 0, refreshToken: 0 } } // Exclude sensitive fields
+//         );
+        
+//         if (!user) {
+//             return res.status(404).json({ message: "User not found" });
+//         }
+        
+//         res.json(user);
+//     } catch (err) {
+//         res.status(500).json({ message: "Error fetching profile", error: err.message });
+//     }
+// });
+
+// // Update user profile
+// app.put('/user/profile', verifyToken, async (req, res) => {
+//     const { username, email, bio } = req.body;
+    
+//     try {
+//         const updateFields = {};
+//         if (username) updateFields.username = username;
+//         if (email) updateFields.email = email;
+//         if (bio !== undefined) updateFields.bio = bio;
+        
+//         const result = await db.collection('users').findOneAndUpdate(
+//             { _id: new ObjectId(req.user._id) },
+//             { $set: updateFields },
+//             { returnDocument: 'after', projection: { password: 0, refreshToken: 0 } }
+//         );
+        
+//         if (!result) {
+//             return res.status(404).json({ message: "User not found" });
+//         }
+        
+//         res.json(result);
+//     } catch (err) {
+//         res.status(400).json({ message: "Error updating profile", error: err.message });
+//     }
+// });
+
+// // Get user statistics
+// app.get('/user/stats', verifyToken, async (req, res) => {
+//     try {
+//         const userId = new ObjectId(req.user._id);
+        
+//         // Count published blogs
+//         const totalBlogs = await db.collection('posts').countDocuments({
+//             author: userId,
+//             status: { $ne: 'draft' }
+//         });
+        
+//         // Count drafts
+//         const totalDrafts = await db.collection('posts').countDocuments({
+//             author: userId,
+//             status: 'draft'
+//         });
+        
+//         // Count total likes on user's posts
+//         const likesResult = await db.collection('posts').aggregate([
+//             { $match: { author: userId } },
+//             { $group: { _id: null, totalLikes: { $sum: '$likes' } } }
+//         ]).toArray();
+//         const totalLikes = likesResult[0]?.totalLikes || 0;
+        
+//         // Count total comments on user's posts
+//         const totalComments = await db.collection('comments').countDocuments({
+//             post: { $in: await db.collection('posts').distinct('_id', { author: userId }) }
+//         });
+        
+//         res.json({
+//             totalBlogs,
+//             totalDrafts,
+//             totalLikes,
+//             totalComments
+//         });
+//     } catch (err) {
+//         res.status(500).json({ message: "Error fetching stats", error: err.message });
+//     }
+// });

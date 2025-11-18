@@ -21,7 +21,7 @@ export default function BlogCard({ post }){
         <Link to={"/blogs/" + post._id} style={style}>
           <h3 className="card-title">{post.title}</h3>
         </Link>
-        <div className="meta-row">By <strong>{post.author}</strong></div>
+        <div className="meta-row">By <strong>{typeof post.author === 'string' ? post.author : post.author?.username || 'Unknown'}</strong></div>
         <div className="excerpt">{post.content}</div>
       </div>
 
